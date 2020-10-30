@@ -1,0 +1,35 @@
+version: "3.7"
+
+services:
+  TRAEFIK_SERVICE_NAME:
+    image: TRAEFIK_IMAGE_NAME
+    container_name: "TRAEFIK_SERVICE_NAME"
+    hostname: TRAEFIK_SERVICE_NAME
+    restart: unless-stopped
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro #<== sync time from the node
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`HOST_DOMAIN`) && (PathPrefix(`/DASHBOARD_PATH`) || PathPrefix(`/api`))"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.entrypoints=HTTPS_ENTRYPOINT"
+      - "traefik.http.routers.traefik.middlewares=auth_all,traefik-strip"
+      - "traefik.http.middlewares.traefik-strip.stripprefix.prefixes=/DASHBOARD_PATH"
+      - "traefik.http.middlewares.auth_all.basicauth.usersfile=/etc/traefik/dashboard_credentials"
+    networks:
+      - DOCKER_TRAEFIK_NETWORK
+
+networks:
+  DOCKER_TRAEFIK_NETWORK:
+    external: true

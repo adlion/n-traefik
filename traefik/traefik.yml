@@ -1,0 +1,48 @@
+log:
+  level: LOG_LEVEL
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+ping:
+  entryPoint: "PING_ENTRYPOINT_NAME"
+
+api: {}
+
+defaultEntryPoints:
+  - HTTP_ENTRYPOINT
+  - HTTPS_ENTRYPOINT
+
+entryPoints:
+  PING_ENTRYPOINT_NAME:
+    address: ":PING_PORT"
+
+  HTTP_ENTRYPOINT:
+    address: ":HTTP_PORT"
+    http:
+      redirections:
+        entryPoint:
+          to: HTTPS_ENTRYPOINT
+          scheme: https
+          permanent: true
+
+  HTTPS_ENTRYPOINT:
+    address: ":HTTPS_PORT"
+    transport:
+      lifeCycle:
+        requestAcceptGraceTimeout: 35
+        graceTimeOut: 30
+
+providers:
+  file:
+    directory: /etc/traefik/conf.d
+    watch: true
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    # swarmMode: true
+    exposedByDefault: false
+    network: net-frontend
+    watch: true
+    swarmModeRefreshSeconds: 300
+    defaultRule: "Host(`HOST_DOMAIN`)"
